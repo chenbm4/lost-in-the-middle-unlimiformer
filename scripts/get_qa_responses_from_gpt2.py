@@ -103,7 +103,6 @@ def main(
         raise ValueError("Unable to find CUDA device with torch. Please use a CUDA device to run this script.")
 
     config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
-    config.attn_config["attn_impl"] = "triton"
     config.max_seq_len = 16384
     # (input + output) tokens can now be up to 16384
     logger.info("Loading tokenizer")
