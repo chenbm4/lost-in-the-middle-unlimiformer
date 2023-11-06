@@ -124,7 +124,7 @@ def main(
         config=config,
         low_cpu_mem_usage=True,
         trust_remote_code=True,
-        torch_dtype=torch.bfloat16,
+        torch_dtype=torch.dfloat16,
         **extra_kwargs,
     )
     # Move model to GPU if we're using single-gpu
@@ -136,7 +136,7 @@ def main(
     do_sample = temperature > 0.0
 
     responses = []
-    with torch.autocast(device, dtype=torch.bfloat16):
+    with torch.autocast(device, dtype=torch.dfloat16):
         for batched_prompts in tqdm(chunks(prompts, batch_size), total=math.ceil(len(prompts) / batch_size)):
             inputs = tokenizer(batched_prompts, return_tensors="pt", padding=True).to(device)
             outputs = model.generate(
