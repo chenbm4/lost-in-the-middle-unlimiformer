@@ -5,9 +5,9 @@ import argparse
 import json
 import logging
 import pathlib
-import random
 from tqdm import tqdm
-from xopen import xopen
+import gzip
+import random
 
 from lost_in_the_middle.prompting import (
     Document,
@@ -23,15 +23,14 @@ def generate_prompts(input_path, output_path, use_random_ordering, prompt_mentio
 
     prompts = []
 
-    # Fetch all of the prompts
-    with xopen(input_path) as fin:
+    # Fetch all of the prompts from a .gz file
+    with gzip.open(input_path, 'rt', encoding='utf-8') as fin:
         for line in tqdm(fin):
             input_example = json.loads(line)
             question = input_example["question"]
             documents = [Document.from_dict(ctx) for ctx in input_example["ctxs"]]
 
             if use_random_ordering:
-                # Randomly order only the distractors, keeping isgold documents at their existing index.
                 original_gold_document = next((doc for doc in documents if doc.isgold), None)
                 distractors = [doc for doc in documents if not doc.isgold]
                 random.shuffle(distractors)
@@ -47,8 +46,8 @@ def generate_prompts(input_path, output_path, use_random_ordering, prompt_mentio
             )
             prompts.append(prompt)
 
-    # Save prompts to the output file
-    with open(output_path, "w") as f:
+    # Save prompts to a .gz file
+    with gzip.open(output_path, 'wt', encoding='utf-8') as f:
         for prompt in prompts:
             f.write(prompt + "\n\n")
 
