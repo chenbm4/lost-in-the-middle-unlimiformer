@@ -31,20 +31,29 @@ from lost_in_the_middle.prompting import (
 logger = logging.getLogger(__name__)
 random.seed(0)
 
+# python src/run_generation.py 
+# --model_type llama 
+# --model_name_or_path TheBloke/Llama-2-7B-chat-GPTQ 
+# --prefix "<s>[INST] <<SYS>>\n You are a helpful assistant. Answer with detailed responses according 
+# to the entire instruction or question. \n<</SYS>>\n\n Summarize the following book: "  
+# --prompt example_inputs/harry_potter.txt 
+# --suffix " [/INST]" 
+# --test_unlimiformer 
+# --length 200 
+# --layer_begin 16 
+# --use_datastore False
 def run_unlimiformer(prompt, model_name, length=200):
     command = [
         "python", "unlimiformer/src/run_generation.py",
-        "--model_type", "opt",
-        "--model_name_or_path", "facebook/opt-125m",
-        "--prefix", "...",
+        "--model_type", "llama",
+        "--model_name_or_path", "TheBloke/Llama-2-7B-chat-GPTQ",
+        "--prefix", "<s>[INST] <<SYS>>\n Below is an instruction that describes a task. Write a response that appropriately completes the request. \n<</SYS>>\n\n",
         "--prompt", prompt,
         "--suffix", " [/INST]",
         "--test_unlimiformer",
-        "--fp16",
         "--length", str(length),
         "--layer_begin", "16",
-        "--index_devices", "1",
-        "--datastore_device", "1"
+        "--use_datastore False"
     ]
 
     result = subprocess.run(command, capture_output=True, text=True)
