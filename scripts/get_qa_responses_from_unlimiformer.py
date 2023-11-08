@@ -48,6 +48,7 @@ def run_unlimiformer(prompt, model_name, length=200):
     ]
 
     result = subprocess.run(command, capture_output=True, text=True)
+    print(result.stdout)
     if result.returncode != 0:
         raise RuntimeError(f"Special model script failed with return code {result.returncode}: {result.stderr}")
     
