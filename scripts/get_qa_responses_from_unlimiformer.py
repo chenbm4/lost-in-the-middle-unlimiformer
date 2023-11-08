@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+# for gold_index in 0 4 9; do
+#     python -u ./scripts/get_qa_responses_from_unlimiformer.py \
+#         --input-path qa_data/10_total_documents/nq-open-10_total_documents_gold_at_${gold_index}.jsonl.gz \
+#         --num-gpus 1 \
+#         --max-new-tokens 100 \
+#         --batch-size 1 \
+#         --max-memory-per-gpu 32 \
+#         --num-gpus 1 \
+#         --model TheBloke/Llama-2-7B-chat-GPTQ  \
+#         --output-path qa_predictions/10_total_documents/nq-open-10_total_documents_gold_at_${gold_index}-unlimiformer-llama-2-7b-chat-gptq-predictions.jsonl.gz
+# done
 """Given a data file with questions and retrieval results to use, run GPT2 to get responses.
 
 Currently supports `gpt2-xl`.
@@ -222,7 +233,7 @@ if __name__ == "__main__":
         "--model",
         help="Model to use in generating responses",
         required=True,
-        choices=["gpt2-xl", "facebook/opt-125m"],
+        choices=["gpt2-xl", "facebook/opt-125m", "TheBloke/Llama-2-7B-chat-GPTQ"],
     )
     parser.add_argument("--temperature", help="Temperature to use in generation", type=float, default=0.0)
     parser.add_argument("--top-p", help="Top-p to use in generation", type=float, default=1.0)
