@@ -160,41 +160,14 @@ def main(
     do_sample = temperature > 0.0
 
     responses = []
-    # with torch.autocast(device, dtype=torch.float16):
-    #     for batched_prompts in tqdm(chunks(prompts, batch_size), total=math.ceil(len(prompts) / batch_size)):
-    #         inputs = tokenizer(batched_prompts, return_tensors="pt", padding=True).to(device)
-    #         outputs = model.generate(
-    #             **inputs,
-    #             max_new_tokens=max_new_tokens,
-    #             do_sample=do_sample,
-    #             temperature=temperature if do_sample else None,
-    #             top_p=top_p if do_sample else None,
-    #             use_cache=True,
-    #             eos_token_id=0,
-    #             pad_token_id=0,
-    #             return_dict_in_generate=False,
-    #         )
-    #         for i, generated_sequence in enumerate(outputs):
-    #             input_ids = inputs[i].ids
-    #             text = tokenizer.decode(generated_sequence, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-
-    #             if input_ids is None:
-    #                 prompt_length = 0
-    #             else:
-    #                 prompt_length = len(
-    #                     tokenizer.decode(
-    #                         input_ids,
-    #                         skip_special_tokens=True,
-    #                         clean_up_tokenization_spaces=True,
-    #                     )
-    #                 )
-    #             new_text = text[prompt_length:]
-    #             responses.append(new_text)
-
-    # Replace the model generation part with a call to run_unlimiformer
+    iteration_count = 0  # Initialize the counter to track the number of iterations
     for prompt in tqdm(prompts, total=len(prompts)):
+        if iteration_count >= 10:  # Check if 10 iterations have been completed
+            print("Stopping after 10 iterations for testing.")
+            break  # Exit the loop after 10 iterations
         response = run_unlimiformer(prompt, model_name)
         responses.append(response)
+        iteration_count += 1  # Increment the counter
 
     with xopen(output_path, "w") as f:
         for example, model_documents, prompt, response in zip(examples, all_model_documents, prompts, responses):
