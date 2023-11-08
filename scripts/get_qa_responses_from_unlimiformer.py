@@ -35,7 +35,7 @@ def run_unlimiformer(prompt, model_name, length=200):
     command = [
         "python", "unlimiformer/src/run_generation.py",
         "--model_type", "opt",
-        "--model_name_or_path", model_name,
+        "--model_name_or_path", "facebook/opt-125m",
         "--prefix", "...",
         "--prompt", prompt,
         "--suffix", " [/INST]",
