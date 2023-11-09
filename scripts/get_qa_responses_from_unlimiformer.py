@@ -65,7 +65,7 @@ def run_unlimiformer(prompt, model_name, length=200):
         "--test_unlimiformer",
         "--length", str(length),
         "--layer_begin", "16",
-        "--use_datastore", False
+        "--use_datastore", "False"
     ]
 
     result = subprocess.run(command, capture_output=True, text=True, env=dict(os.environ, CUDA_VISIBLE_DEVICES='0'))
