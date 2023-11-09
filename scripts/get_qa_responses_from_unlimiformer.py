@@ -54,15 +54,15 @@ random.seed(0)
 # --length 200 
 # --layer_begin 16 
 # --use_datastore False
-def run_unlimiformer(prompt, model_name, length=100):
+def run_unlimiformer(prompt, model_name, test_unlimiformer, length=100):
     command = [
         "python", "unlimiformer/src/run_generation.py",
         "--model_type", "llama",
-        "--model_name_or_path", "TheBloke/Llama-2-7B-chat-GPTQ",
+        "--model_name_or_path", model_name,
         "--prefix", "<s>[INST] <<SYS>>\n Below is an instruction that describes a task. Write a short (a few words) response that appropriately completes the request. \n<</SYS>>\n\n",
         "--prompt", prompt,
         "--suffix", " [/INST]",
-        "--test_unlimiformer",
+        "--test_unlimiformer", test_unlimiformer,
         "--length", str(length),
         "--layer_begin", "16",
         "--use_datastore", "False"
@@ -89,6 +89,7 @@ def main(
     max_memory_per_gpu,
     max_new_tokens,
     output_path,
+    test_unlimiformer
 ):
     # Create directory for output path if it doesn't exist.
     pathlib.Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -186,7 +187,7 @@ def main(
         if iteration_count >= 100:  # Check if 10 iterations have been completed
             print("Stopping after 100 iterations for testing.")
             break  # Exit the loop after 100 iterations
-        response = run_unlimiformer(prompt, model_name)
+        response = run_unlimiformer(prompt, model_name, test_unlimiformer)
         responses.append(response)
         iteration_count += 1  # Increment the counter
 
@@ -270,6 +271,7 @@ if __name__ == "__main__":
         type=int,
         default=100,
     )
+    parser.add_argument("--test-unlimiformer", help="Using Unlimiformer or not", type=str, default="True")
     args = parser.parse_args()
 
     logger.info("running %s", " ".join(sys.argv))
@@ -287,5 +289,6 @@ if __name__ == "__main__":
         args.max_memory_per_gpu,
         args.max_new_tokens,
         args.output_path,
+        args.test_unlimiformer
     )
     logger.info("finished running %s", sys.argv[0])
