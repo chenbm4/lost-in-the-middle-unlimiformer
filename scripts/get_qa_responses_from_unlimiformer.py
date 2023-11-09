@@ -54,7 +54,7 @@ random.seed(0)
 # --length 200 
 # --layer_begin 16 
 # --use_datastore False
-def run_unlimiformer(prompt, model_name, length=20):
+def run_unlimiformer(prompt, model_name, length=100):
     command = [
         "python", "unlimiformer/src/run_generation.py",
         "--model_type", "llama",
