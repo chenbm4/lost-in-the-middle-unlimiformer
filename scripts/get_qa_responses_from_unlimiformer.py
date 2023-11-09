@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 # for gold_index in 0 4 9; do
 #     python -u ./scripts/get_qa_responses_from_unlimiformer.py \
 #         --input-path qa_data/10_total_documents/nq-open-10_total_documents_gold_at_${gold_index}.jsonl.gz \
@@ -32,6 +32,7 @@ from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 from xopen import xopen
 
 import subprocess
+import os
 
 from lost_in_the_middle.prompting import (
     Document,
@@ -67,7 +68,10 @@ def run_unlimiformer(prompt, model_name, length=200):
         "--use_datastore False"
     ]
 
-    result = subprocess.run(command, capture_output=True, text=True)
+    print(torch.cuda.is_available())
+    print(torch.cuda.current_device())
+    print(torch.cuda.get_device_name(0))
+    result = subprocess.run(command, capture_output=True, text=True, env=dict(os.environ, CUDA_VISIBLE_DEVICES='0'))
     if result.returncode != 0:
         raise RuntimeError(f"Special model script failed with return code {result.returncode}: {result.stderr}")
     
