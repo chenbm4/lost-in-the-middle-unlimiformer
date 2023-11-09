@@ -142,7 +142,7 @@ def format_instruct_prompt(instruction):
 def format_chat_prompt(instruction):
     # Format the prompt according to LLaMa 2 chat model requirements
     prompt = f"<s>[INST] <<SYS>>\n Below is an instruction that describes a task." \
-        "Write a response that appropriately completes the request. \n<</SYS>>\n\n{instruction}"
+        f"Write a response that appropriately completes the request. \n<</SYS>>\n\n{instruction}"
     return prompt
 
 if __name__ == "__main__":
