@@ -1,4 +1,15 @@
-#!/usr/bin/env python3
+# !/usr/bin/env python3
+# for gold_index in 0 4 9; do
+#     python -u ./scripts/get_qa_responses_from_unlimiformer.py \
+#         --input-path qa_data/10_total_documents/nq-open-10_total_documents_gold_at_${gold_index}.jsonl.gz \
+#         --num-gpus 1 \
+#         --max-new-tokens 100 \
+#         --batch-size 1 \
+#         --max-memory-per-gpu 32 \
+#         --num-gpus 1 \
+#         --model TheBloke/Llama-2-7B-chat-GPTQ  \
+#         --output-path qa_predictions/10_total_documents/nq-open-10_total_documents_gold_at_${gold_index}-unlimiformer-llama-2-7b-chat-gptq-predictions.jsonl.gz
+# done
 """Given a data file with questions and retrieval results to use, run GPT2 to get responses.
 
 Currently supports `gpt2-xl`.
@@ -21,6 +32,7 @@ from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 from xopen import xopen
 
 import subprocess
+import os
 
 from lost_in_the_middle.prompting import (
     Document,
@@ -31,23 +43,32 @@ from lost_in_the_middle.prompting import (
 logger = logging.getLogger(__name__)
 random.seed(0)
 
-def run_unlimiformer(prompt, model_name, length=200):
+# python src/run_generation.py 
+# --model_type llama 
+# --model_name_or_path TheBloke/Llama-2-7B-chat-GPTQ 
+# --prefix "<s>[INST] <<SYS>>\n You are a helpful assistant. Answer with detailed responses according 
+# to the entire instruction or question. \n<</SYS>>\n\n Summarize the following book: "  
+# --prompt example_inputs/harry_potter.txt 
+# --suffix " [/INST]" 
+# --test_unlimiformer 
+# --length 200 
+# --layer_begin 16 
+# --use_datastore False
+def run_unlimiformer(prompt, model_name, length=100):
     command = [
         "python", "unlimiformer/src/run_generation.py",
-        "--model_type", "opt",
-        "--model_name_or_path", model_name,
-        "--prefix", "...",
+        "--model_type", "llama",
+        "--model_name_or_path", "TheBloke/Llama-2-7B-chat-GPTQ",
+        "--prefix", "<s>[INST] <<SYS>>\n Below is an instruction that describes a task. Write a short (a few words) response that appropriately completes the request. \n<</SYS>>\n\n",
         "--prompt", prompt,
         "--suffix", " [/INST]",
         "--test_unlimiformer",
-        "--fp16",
         "--length", str(length),
         "--layer_begin", "16",
-        "--index_devices", "1",
-        "--datastore_device", "1"
+        "--use_datastore", "False"
     ]
 
-    result = subprocess.run(command, capture_output=True, text=True)
+    result = subprocess.run(command, capture_output=True, text=True, env=dict(os.environ, CUDA_VISIBLE_DEVICES='0'))
     if result.returncode != 0:
         raise RuntimeError(f"Special model script failed with return code {result.returncode}: {result.stderr}")
     
@@ -143,58 +164,31 @@ def main(
     else:
         extra_kwargs = {}
 
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        config=config,
-        low_cpu_mem_usage=True,
-        trust_remote_code=True,
-        torch_dtype=torch.float16,
-        **extra_kwargs,
-    )
-    # Move model to GPU if we're using single-gpu
-    if num_gpus == 1:
-        model = model.to(device)
+    # model = AutoModelForCausalLM.from_pretrained(
+    #     model_name,
+    #     config=config,
+    #     low_cpu_mem_usage=True,
+    #     trust_remote_code=True,
+    #     torch_dtype=torch.float16,
+    #     **extra_kwargs,
+    # )
+    # # Move model to GPU if we're using single-gpu
+    # if num_gpus == 1:
+    #     model = model.to(device)
 
-    print(model)
+    # print(model)
 
     do_sample = temperature > 0.0
 
     responses = []
-    # with torch.autocast(device, dtype=torch.float16):
-    #     for batched_prompts in tqdm(chunks(prompts, batch_size), total=math.ceil(len(prompts) / batch_size)):
-    #         inputs = tokenizer(batched_prompts, return_tensors="pt", padding=True).to(device)
-    #         outputs = model.generate(
-    #             **inputs,
-    #             max_new_tokens=max_new_tokens,
-    #             do_sample=do_sample,
-    #             temperature=temperature if do_sample else None,
-    #             top_p=top_p if do_sample else None,
-    #             use_cache=True,
-    #             eos_token_id=0,
-    #             pad_token_id=0,
-    #             return_dict_in_generate=False,
-    #         )
-    #         for i, generated_sequence in enumerate(outputs):
-    #             input_ids = inputs[i].ids
-    #             text = tokenizer.decode(generated_sequence, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-
-    #             if input_ids is None:
-    #                 prompt_length = 0
-    #             else:
-    #                 prompt_length = len(
-    #                     tokenizer.decode(
-    #                         input_ids,
-    #                         skip_special_tokens=True,
-    #                         clean_up_tokenization_spaces=True,
-    #                     )
-    #                 )
-    #             new_text = text[prompt_length:]
-    #             responses.append(new_text)
-
-    # Replace the model generation part with a call to run_unlimiformer
+    iteration_count = 0  # Initialize the counter to track the number of iterations
     for prompt in tqdm(prompts, total=len(prompts)):
+        if iteration_count >= 10:  # Check if 10 iterations have been completed
+            print("Stopping after 10 iterations for testing.")
+            break  # Exit the loop after 10 iterations
         response = run_unlimiformer(prompt, model_name)
         responses.append(response)
+        iteration_count += 1  # Increment the counter
 
     with xopen(output_path, "w") as f:
         for example, model_documents, prompt, response in zip(examples, all_model_documents, prompts, responses):
@@ -240,7 +234,7 @@ if __name__ == "__main__":
         "--model",
         help="Model to use in generating responses",
         required=True,
-        choices=["gpt2-xl", "facebook/opt-125m"],
+        choices=["gpt2-xl", "facebook/opt-125m", "TheBloke/Llama-2-7B-chat-GPTQ"],
     )
     parser.add_argument("--temperature", help="Temperature to use in generation", type=float, default=0.0)
     parser.add_argument("--top-p", help="Top-p to use in generation", type=float, default=1.0)
