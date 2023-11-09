@@ -58,7 +58,7 @@ def run_unlimiformer(prompt, model_name, length=100):
     command = [
         "python", "unlimiformer/src/run_generation.py",
         "--model_type", "llama",
-        "--model_name_or_path", "TheBloke/Llama-2-7B-chat-GPTQ",
+        "--model_name_or_path", model_name,
         "--prefix", "<s>[INST] <<SYS>>\n Below is an instruction that describes a task. Write a short (a few words) response that appropriately completes the request. \n<</SYS>>\n\n",
         "--prompt", prompt,
         "--suffix", " [/INST]",
