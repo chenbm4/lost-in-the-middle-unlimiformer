@@ -181,14 +181,14 @@ def main(
     do_sample = temperature > 0.0
 
     responses = []
-    iteration_count = 100  # Initialize the counter to track the number of iterations
+    iteration_count = 0  # Initialize the counter to track the number of iterations
     for prompt in tqdm(prompts, total=len(prompts)):
         if iteration_count >= 100:  # Check if 10 iterations have been completed
             print("Stopping after 100 iterations for testing.")
             break  # Exit the loop after 100 iterations
         response = run_unlimiformer(prompt, model_name)
         responses.append(response)
-        # iteration_count += 1  # Increment the counter
+        iteration_count += 1  # Increment the counter
 
     with xopen(output_path, "w") as f:
         for example, model_documents, prompt, response in zip(examples, all_model_documents, prompts, responses):
