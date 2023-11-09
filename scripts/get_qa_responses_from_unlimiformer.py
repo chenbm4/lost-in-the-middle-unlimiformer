@@ -63,6 +63,7 @@ def run_unlimiformer(prompt, model_name, length=100):
         "--prompt", prompt,
         "--suffix", " [/INST]",
         "--test_unlimiformer",
+        "--fp16",
         "--length", str(length),
         "--layer_begin", "16",
         "--use_datastore", "False"
