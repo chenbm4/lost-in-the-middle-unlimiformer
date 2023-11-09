@@ -68,9 +68,6 @@ def run_unlimiformer(prompt, model_name, length=200):
         "--use_datastore False"
     ]
 
-    print(torch.cuda.is_available())
-    print(torch.cuda.current_device())
-    print(torch.cuda.get_device_name(0))
     result = subprocess.run(command, capture_output=True, text=True, env=dict(os.environ, CUDA_VISIBLE_DEVICES='0'))
     if result.returncode != 0:
         raise RuntimeError(f"Special model script failed with return code {result.returncode}: {result.stderr}")
@@ -167,19 +164,19 @@ def main(
     else:
         extra_kwargs = {}
 
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        config=config,
-        low_cpu_mem_usage=True,
-        trust_remote_code=True,
-        torch_dtype=torch.float16,
-        **extra_kwargs,
-    )
-    # Move model to GPU if we're using single-gpu
-    if num_gpus == 1:
-        model = model.to(device)
+    # model = AutoModelForCausalLM.from_pretrained(
+    #     model_name,
+    #     config=config,
+    #     low_cpu_mem_usage=True,
+    #     trust_remote_code=True,
+    #     torch_dtype=torch.float16,
+    #     **extra_kwargs,
+    # )
+    # # Move model to GPU if we're using single-gpu
+    # if num_gpus == 1:
+    #     model = model.to(device)
 
-    print(model)
+    # print(model)
 
     do_sample = temperature > 0.0
 
