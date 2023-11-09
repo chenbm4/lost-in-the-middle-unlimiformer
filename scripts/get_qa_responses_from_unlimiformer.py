@@ -234,7 +234,7 @@ if __name__ == "__main__":
         "--model",
         help="Model to use in generating responses",
         required=True,
-        choices=["gpt2-xl", "facebook/opt-125m", "TheBloke/Llama-2-7B-chat-GPTQ"],
+        choices=["gpt2-xl", "facebook/opt-125m", "meta-llama/Llama-2-7b-chat-hf"],
     )
     parser.add_argument("--temperature", help="Temperature to use in generation", type=float, default=0.0)
     parser.add_argument("--top-p", help="Top-p to use in generation", type=float, default=1.0)
