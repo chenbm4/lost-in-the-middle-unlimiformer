@@ -72,6 +72,7 @@ def main(
             input_example = json.loads(line)
             # Get the prediction for the input example
             question = input_example["question"]
+            answers = input_example["answers"]
             if closedbook:
                 documents = []
             else:
@@ -111,7 +112,10 @@ def main(
                     logger.warning(f"Model {model_name} appears to be a chat model, applying chat formatting")
                     did_format_warn = True
                 prompt = format_chat_prompt(prompt)
-            prompts[question] = prompt
+            prompts[question] = {
+                "prompt": prompt,
+                "answers": answers
+            }
             examples.append(deepcopy(input_example))
             all_model_documents.append(documents)
 
