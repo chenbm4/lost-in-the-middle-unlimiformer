@@ -10,7 +10,7 @@ longchat@git+https://github.com/DachengLi1/LongChat.git@43d71f03d7711a2ab3b78ee8
 transformers
 torch
 einops
-flash-attn==1.0.5
+flash-attn==1.0.4
 triton-pre-mlir@git+https://github.com/vchiley/triton.git@triton_pre_mlir#subdirectory=python
 accelerate
 
