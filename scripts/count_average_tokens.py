@@ -7,20 +7,15 @@ def calculate_average_tokens(file_path):
     num_prompts = 0
 
     with gzip.open(file_path, 'rt', encoding='utf-8') as file:  # Open gzip file
-        for line in file:
-            try:
-                data = json.loads(line)  # Load each line as a JSON object
+        data = json.load(file)  # Load the entire JSON file as a single JSON object
 
-                # Iterate over each question-prompt pair in the JSON object
-                for question, details in data.items():
-                    if 'prompt' in details:
-                        prompt = details['prompt']
-                        tokens = prompt.split()
-                        total_tokens += len(tokens)
-                        num_prompts += 1
-            except json.JSONDecodeError as e:
-                print(f"Error parsing line: {e}")
-                continue
+        # Iterate over each question-prompt pair in the JSON object
+        for question, details in data.items():
+            if 'prompt' in details:
+                prompt = details['prompt']
+                tokens = prompt.split()
+                total_tokens += len(tokens)
+                num_prompts += 1
 
     return total_tokens / num_prompts if num_prompts > 0 else 0
 
