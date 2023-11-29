@@ -95,7 +95,12 @@ def main(
             
             if use_all_random_ordering:
                 # Randomly order all documents
+                original_gold_index = next((idx for idx, doc in enumerate(documents) if doc.isgold), None)
                 random.shuffle(documents)
+                new_gold_index = next((idx for idx, doc in enumerate(documents) if doc.isgold), None)
+
+                # Optionally, store the new gold index in your output
+                input_example['new_gold_index'] = new_gold_index
 
             if closedbook:
                 prompt = get_closedbook_qa_prompt(question)
