@@ -55,6 +55,7 @@ def main(
     closedbook,
     prompt_mention_random_ordering,
     use_random_ordering,
+    use_all_random_ordering,
     query_aware_contextualization,
     output_path,
 ):
@@ -91,6 +92,10 @@ def main(
                 random.shuffle(distractors)
                 distractors.insert(original_gold_index, original_gold_document)
                 documents = distractors
+            
+            if use_all_random_ordering:
+                # Randomly order all documents
+                random.shuffle(documents)
 
             if closedbook:
                 prompt = get_closedbook_qa_prompt(question)
@@ -173,6 +178,11 @@ if __name__ == "__main__":
         help="Randomize the ordering of the distractors, rather than sorting by relevance.",
     )
     parser.add_argument(
+        "---use-all-random-ordering",
+        action="store_true",
+        help="Randomize the ordering of all documents, rather than sorting by relevance.",
+    )
+    parser.add_argument(
         "--query-aware-contextualization",
         action="store_true",
         help="Place the question both before and after the documents.",
@@ -187,6 +197,7 @@ if __name__ == "__main__":
         args.closedbook,
         args.prompt_mention_random_ordering,
         args.use_random_ordering,
+        args.use_all_random_ordering,
         args.query_aware_contextualization,
         args.output_path,
     )
