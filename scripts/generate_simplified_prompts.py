@@ -22,10 +22,16 @@ import logging
 import pathlib
 import random
 import sys
+import os
 from copy import deepcopy
 
 from tqdm import tqdm
 from xopen import xopen
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(script_dir)
+src_dir = os.path.join(parent_dir, 'src')
+sys.path.append(src_dir)
 
 from lost_in_the_middle.prompting import (
     Document,
@@ -128,7 +134,8 @@ def main(
             all_model_documents.append(documents)
 
     with xopen(output_path, "w") as f:
-        json.dump(prompts, f, ensure_ascii=False, indent=4)
+        for prompt in prompts.values():
+            f.write(json.dumps(prompt) + "\n")
 
 
 def chunks(lst, n):
