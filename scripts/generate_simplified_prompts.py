@@ -99,9 +99,6 @@ def main(
                 random.shuffle(documents)
                 new_gold_index = next((idx for idx, doc in enumerate(documents) if doc.isgold), None)
 
-                # Optionally, store the new gold index in your output
-                input_example['new_gold_index'] = new_gold_index
-
             if closedbook:
                 prompt = get_closedbook_qa_prompt(question)
             else:
@@ -124,7 +121,8 @@ def main(
                 prompt = format_chat_prompt(prompt)
             prompts[question] = {
                 "prompt": prompt,
-                "answers": answers
+                "answers": answers,
+                "new_gold_index": new_gold_index if use_all_random_ordering else None
             }
             examples.append(deepcopy(input_example))
             all_model_documents.append(documents)
