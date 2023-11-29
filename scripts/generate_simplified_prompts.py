@@ -178,7 +178,7 @@ if __name__ == "__main__":
         help="Randomize the ordering of the distractors, rather than sorting by relevance.",
     )
     parser.add_argument(
-        "---use-all-random-ordering",
+        "--use-all-random-ordering",
         action="store_true",
         help="Randomize the ordering of all documents, rather than sorting by relevance.",
     )
