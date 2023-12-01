@@ -6,10 +6,16 @@ import json
 import logging
 import statistics
 import sys
+import os
 from copy import deepcopy
 
 from tqdm import tqdm
 from xopen import xopen
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(script_dir)
+src_dir = os.path.join(parent_dir, 'src')
+sys.path.append(src_dir)
 
 from lost_in_the_middle.metrics import best_subspan_em
 
@@ -20,36 +26,31 @@ METRICS = [
 ]
 
 
-def main(
-    input_path,
-    output_path,
-):
+def main(input_path, output_path, score_by_new_gold_index):
     all_examples = []
+    examples_by_new_gold_index = {}  # To store examples by their new_gold_index
+
     with xopen(input_path) as fin:
         for line in tqdm(fin):
             input_example = json.loads(line)
             all_examples.append(input_example)
+            if score_by_new_gold_index:
+                new_gold_index = input_example.get("new_gold_index")
+                if new_gold_index is not None:
+                    examples_by_new_gold_index.setdefault(new_gold_index, []).append(input_example)
 
-    # Compute normal metrics in parallel, if applicable
-    logger.info("Computing metrics")
-    all_example_metrics = []
-    for example in tqdm(all_examples):
-        all_example_metrics.append(get_metrics_for_example(example))
+    # Compute and log overall metrics
+    log_metrics(all_examples, "Overall")
 
-    # Average metrics across examples
-    for (_, metric_name) in METRICS:
-        average_metric_value = statistics.mean(
-            example_metrics[metric_name] for (example_metrics, _) in all_example_metrics
-        )
-        logger.info(f"{metric_name}: {average_metric_value}")
+    if score_by_new_gold_index:
+        # Sort and log metrics per new_gold_index
+        for new_gold_index in sorted(examples_by_new_gold_index.keys()):
+            logger.info(f"new_gold_index: {new_gold_index}")
+            log_metrics(examples_by_new_gold_index[new_gold_index], f"new_gold_index {new_gold_index}")
 
     if output_path:
-        with xopen(output_path, "w") as f:
-            for (example_metrics, example) in all_example_metrics:
-                example_with_metrics = deepcopy(example)
-                for metric_name, metric_value in example_metrics.items():
-                    example_with_metrics[f"metric_{metric_name}"] = metric_value
-                f.write(json.dumps(example_with_metrics) + "\n")
+        # Write examples with metrics to output file
+        write_output(all_examples, output_path)
 
 
 def get_metrics_for_example(example):
@@ -67,6 +68,24 @@ def get_metrics_for_example(example):
     return (example_metrics, example)
 
 
+def log_metrics(examples, label):
+    logger.info(f"Computing metrics for {label}")
+    all_example_metrics = [get_metrics_for_example(example) for example in examples]
+
+    # Average metrics across examples
+    for (_, metric_name) in METRICS:
+        average_metric_value = statistics.mean(
+            example_metrics[metric_name] for (example_metrics, _) in all_example_metrics
+        )
+        logger.info(f"{metric_name} ({label}): {average_metric_value}")
+
+
+def write_output(examples, output_path):
+    with xopen(output_path, "w") as f:
+        for example in examples:
+            f.write(json.dumps(example) + "\n")
+
+
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s - %(module)s - %(levelname)s - %(message)s", level=logging.INFO)
     parser = argparse.ArgumentParser()
@@ -75,11 +94,17 @@ if __name__ == "__main__":
         "--output-path",
         help="Path to write data with model predictions, answers, and scores.",
     )
+    parser.add_argument(
+        "--score-by-new-gold-index",
+        action="store_true",
+        help="Calculate scores per new_gold_index."
+    )
     args = parser.parse_args()
 
     logger.info("running %s", " ".join(sys.argv))
     main(
         args.input_path,
         args.output_path,
+        args.score_by_new_gold_index,
     )
     logger.info("finished running %s", sys.argv[0])

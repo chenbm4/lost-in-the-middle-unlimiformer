@@ -126,6 +126,7 @@ def main(
                     did_format_warn = True
                 prompt = format_chat_prompt(prompt)
             prompts[question] = {
+                "question": question,
                 "prompt": prompt,
                 "answers": answers,
                 "new_gold_index": new_gold_index if use_all_random_ordering else None
