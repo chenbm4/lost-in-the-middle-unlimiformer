@@ -9,6 +9,7 @@ import sys
 import os
 from copy import deepcopy
 
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 from xopen import xopen
 
@@ -29,6 +30,7 @@ METRICS = [
 def main(input_path, output_path, score_by_new_gold_index):
     all_examples = []
     examples_by_new_gold_index = {}  # To store examples by their new_gold_index
+    metric_values_by_new_gold_index = {}  # To store metric values by their new_gold_index
 
     with xopen(input_path) as fin:
         for line in tqdm(fin):
@@ -46,7 +48,11 @@ def main(input_path, output_path, score_by_new_gold_index):
         # Sort and log metrics per new_gold_index
         for new_gold_index in sorted(examples_by_new_gold_index.keys()):
             logger.info(f"new_gold_index: {new_gold_index}")
-            log_metrics(examples_by_new_gold_index[new_gold_index], f"new_gold_index {new_gold_index}")
+            metrics = log_metrics(examples_by_new_gold_index[new_gold_index], f"new_gold_index {new_gold_index}")
+            metric_values_by_new_gold_index[new_gold_index] = metrics
+
+        plot_metrics(metric_values_by_new_gold_index)
+
 
     if output_path:
         # Write examples with metrics to output file
@@ -72,12 +78,32 @@ def log_metrics(examples, label):
     logger.info(f"Computing metrics for {label}")
     all_example_metrics = [get_metrics_for_example(example) for example in examples]
 
+    metric_averages = {}
+
     # Average metrics across examples
     for (_, metric_name) in METRICS:
         average_metric_value = statistics.mean(
             example_metrics[metric_name] for (example_metrics, _) in all_example_metrics
         )
         logger.info(f"{metric_name} ({label}): {average_metric_value}")
+        metric_averages[metric_name] = average_metric_value
+
+    return metric_averages
+
+
+def plot_metrics(metric_values_by_new_gold_index):
+    # Plotting
+    for metric_name in METRICS:
+        _, metric_label = metric_name
+        values = [metric_values_by_new_gold_index[idx][metric_label] for idx in sorted(metric_values_by_new_gold_index)]
+
+        plt.figure()
+        plt.plot(sorted(metric_values_by_new_gold_index.keys()), values, marker='o')
+        plt.title(f'Metric: {metric_label}')
+        plt.xlabel('new_gold_index')
+        plt.ylabel(metric_label)
+        plt.grid(True)
+        plt.show()
 
 
 def write_output(examples, output_path):
